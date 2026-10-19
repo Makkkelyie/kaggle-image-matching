@@ -1,0 +1,13 @@
+# tested on macOS (Apple silicon, Python 3.9) and the Kaggle GPU image
+torch>=2.2
+torchvision
+kornia==0.8.2
+lightglue @ git+https://github.com/cvg/LightGlue.git
+pycolmap==3.13.0
+transformers>=4.40
+opencv-python-headless
+numpy
+pandas
+scipy
+pytest
+kaggle
