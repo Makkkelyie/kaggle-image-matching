@@ -103,7 +103,11 @@ What I learned from the errors (`results/*/submission.csv` vs ground truth):
 Kaggle: the notebook runs end to end on a Kaggle GPU (internet off). On the public example test set it took
 2.8 min, clustered the ETs dataset perfectly (10 / 9 images, 3 outliers) and wrote a valid `submission.csv`.
 On GPU, LightGlue takes ~0.065 s per pair, so the ~1,300 hidden test images should fit well inside the 9-hour limit.
-Leaderboard score: not submitted yet.
+**Leaderboard score: 19.46** (Version 3, submitted Oct 2026 after the board froze, so it isn't ranked). For scale,
+the frozen board's 1st place is 65.56, 10th is 42.58, and 19.46 would sit around 24th of 30. The hidden test
+scores lower than my local subset (≈0.39 on a 0–1 scale, i.e. ≈39), probably because it includes harder
+datasets than the four I validated on, and a strict 200-inlier threshold costs recall there. The "Next steps"
+below are where I'd expect the gains.
 
 ## Reproduce
 
