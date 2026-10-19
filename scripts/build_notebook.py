@@ -19,9 +19,13 @@ Groups each dataset's images into scenes and estimates camera poses.
 Code and write-up: see the GitHub repo (`kaggle-image-matching`). Internet is off; wheels, weights
 and the `imc` package come from the attached `imc25-offline-deps` dataset."""),
     ("code", """import glob, os, shutil, subprocess, sys
-DEPS = '/kaggle/input/imc25-offline-deps'
-subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-index', '--no-deps',
-                '--find-links', f'{DEPS}/wheels', 'pycolmap', 'lightglue', 'kornia', 'kornia_rs'], check=False)
+# Mount paths differ between Kaggle images, so find the attached inputs instead of hard-coding them.
+DEPS = os.path.dirname(glob.glob('/kaggle/input/**/wheels/lightglue-*.whl', recursive=True)[0]).rsplit('/wheels', 1)[0]
+print('deps:', DEPS)
+print(sys.version)
+for pkg in ['kornia_rs', 'kornia', 'lightglue', 'pycolmap']:  # one at a time so one miss can't block the rest
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-index', '--no-deps',
+                    '--find-links', f'{DEPS}/wheels', pkg], check=True)
 # LightGlue/ALIKED load weights through the torch hub cache.
 hub = os.path.expanduser('~/.cache/torch/hub/checkpoints'); os.makedirs(hub, exist_ok=True)
 for f in glob.glob(f'{DEPS}/weights/*.pth'):
@@ -37,7 +41,8 @@ from imc.data import NAN_R, NAN_T, test_datasets, write_submission
 from imc.features import FeatureConfig
 from imc.pipeline import run_dataset
 
-DATA = Path('/kaggle/input/image-matching-challenge-2025-ongoing')
+DATA = Path(sorted(glob.glob('/kaggle/input/**/sample_submission.csv', recursive=True))[0]).parent
+print('data:', DATA)
 cfg = FeatureConfig(dino_model=f'{DEPS}/weights/dinov2-base')
 print(torch.__version__, torch.cuda.is_available())
 datasets = test_datasets(DATA)
@@ -45,8 +50,10 @@ print({d: len(v) for d, v in datasets.items()})"""),
     ("code", """BUDGET_S = 8 * 3600  # Kaggle limit is 9 h; leave room to write the file
 start, rows = time.time(), []
 for d, names in datasets.items():
-    if time.time() - start > BUDGET_S:
-        print('time budget hit, marking', d, 'as outliers')
+    # The public example folder holds only some of sample_submission's datasets; at scoring time all exist.
+    missing = not (DATA / 'test' / d).is_dir()
+    if missing or time.time() - start > BUDGET_S:
+        print(d, 'not in test folder' if missing else 'skipped: time budget hit', '-> outliers')
         rows += [dict(dataset=d, scene='outliers', image=n, rotation_matrix=NAN_R, translation_vector=NAN_T) for n in names]
         continue
     try:

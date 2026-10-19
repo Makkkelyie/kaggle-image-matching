@@ -13,7 +13,7 @@ OUT=kaggle_deps
 rm -rf "$OUT"; mkdir -p "$OUT/wheels" "$OUT/weights" "$OUT/src"
 
 # Linux wheels for the Kaggle image (Python version differs between images, so grab several).
-for v in 3.10 3.11 3.12; do
+for v in 3.10 3.11 3.12 3.13; do
   for pkg in pycolmap==3.13.0 kornia_rs; do
     $PY -m pip download -q --no-deps --only-binary=:all: --platform manylinux_2_28_x86_64 \
         --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 \

@@ -100,7 +100,10 @@ What I learned from the errors (`results/*/submission.csv` vs ground truth):
 - Speed: matching is the bottleneck (~0.4–0.8 s per pair on the laptop). Global descriptors pruned only 0–9% of pairs
   at a 0.5 similarity threshold. This suits recall (top teams also used loose pairing) but costs time.
 
-Kaggle leaderboard (ongoing competition, single public+private board): not submitted yet.
+Kaggle: the notebook runs end to end on a Kaggle GPU (internet off). On the public example test set it took
+2.8 min, clustered the ETs dataset perfectly (10 / 9 images, 3 outliers) and wrote a valid `submission.csv`.
+On GPU, LightGlue takes ~0.065 s per pair, so the ~1,300 hidden test images should fit well inside the 9-hour limit.
+Leaderboard score: not submitted yet.
 
 ## Reproduce
 
