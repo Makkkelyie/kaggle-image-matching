@@ -23,7 +23,12 @@ COMP = "image-matching-challenge-2025-ongoing"
 
 
 def kaggle(*args: str) -> str:
-    return subprocess.run([str(Path(sys.executable).parent / "kaggle"), "competitions", *args], check=True, capture_output=True, text=True).stdout
+    p = subprocess.run([str(Path(sys.executable).parent / "kaggle"), "competitions", *args], capture_output=True, text=True)
+    if p.returncode != 0:
+        msg = (p.stdout + p.stderr).strip().splitlines()[-1]
+        hint = " (accept the rules on the competition's Rules tab first)" if "403" in msg else ""
+        sys.exit(f"kaggle {' '.join(args[:1])} failed: {msg}{hint}")
+    return p.stdout
 
 
 def list_files() -> list[tuple[str, int]]:

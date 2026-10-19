@@ -1,5 +1,5 @@
 {
- "id": "YOUR_KAGGLE_USERNAME/imc25-dinov2-aliked-lightglue-colmap",
+ "id": "kellydannimao/imc25-dinov2-aliked-lightglue-colmap",
  "title": "IMC25 DINOv2 ALIKED LightGlue COLMAP",
  "code_file": "imc25_submission.ipynb",
  "language": "python",
@@ -8,7 +8,7 @@
  "enable_gpu": true,
  "enable_internet": false,
  "dataset_sources": [
-  "YOUR_KAGGLE_USERNAME/imc25-offline-deps"
+  "kellydannimao/imc25-offline-deps"
  ],
  "competition_sources": [
   "image-matching-challenge-2025-ongoing"

@@ -30,6 +30,9 @@ def main() -> None:
     ap.add_argument("--exhaustive-below", type=int, default=FeatureConfig.exhaustive_below)
     ap.add_argument("--max-keypoints", type=int, default=FeatureConfig.max_keypoints)
     ap.add_argument("--resize", type=int, default=FeatureConfig.resize)
+    ap.add_argument("--min-num-matches", type=int, default=200, help="SfM: min verified inliers per pair")
+    ap.add_argument("--reuse-features", type=Path, default=None,
+                    help="results/<tag> whose cached matches to reuse (re-runs only the SfM stage)")
     a = ap.parse_args()
 
     cfg = FeatureConfig(topk=a.topk, exhaustive_below=a.exhaustive_below,
@@ -42,7 +45,9 @@ def main() -> None:
     for d in a.datasets:
         gt = subsample_dataset(labels, d, a.max_per_scene)
         print(f"== {d}: {len(gt)} images, scenes: {gt['scene'].value_counts().to_dict()}", flush=True)
-        r, s = run_dataset(d, a.data_dir / "train" / d, list(gt["image"]), out / "work", cfg)
+        work = (a.reuse_features or out) / "work"
+        r, s = run_dataset(d, a.data_dir / "train" / d, list(gt["image"]), work, cfg,
+                           a.min_num_matches, reuse_features=a.reuse_features is not None)
         print(json.dumps({k: v for k, v in s.items() if k != "sfm_error"}, default=str), flush=True)
         rows += r
         gts.append(gt)
@@ -52,6 +57,7 @@ def main() -> None:
     final, table = score(pd.concat(gts), pred, ths, datasets=a.datasets)
     table.to_csv(out / "scores.csv", index=False)
     (out / "stats.json").write_text(json.dumps({"config": vars(cfg), "max_per_scene": a.max_per_scene,
+                                                "min_num_matches": a.min_num_matches,
                                                 "final_score": final, "per_dataset": stats}, indent=1, default=str))
     print(table.to_string(index=False, float_format="%.3f"))
     print(f"FINAL (mean over datasets): {final:.4f}")

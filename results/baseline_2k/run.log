@@ -1,0 +1,14 @@
+== ETs: 22 images, scenes: {'another_ET': 10, 'ET': 9, 'outliers': 3}
+{"n_images": 22, "n_pairs": 231, "n_matched_pairs": 202, "t_retrieval": 11.246541261672974, "t_matching": 178.62701201438904, "device": "mps", "t_verify": 0.3116641044616699, "t_mapping": 55.0798819065094, "n_registered": 40, "n_clusters": 2, "t_total": 245.54387092590332}
+== imc2023_theather_imc2024_church: 56 images, scenes: {'church': 30, 'kyiv-puppet-theater': 26}
+{"n_images": 56, "n_pairs": 1404, "n_matched_pairs": 1167, "t_retrieval": 17.555620670318604, "t_matching": 927.2532091140747, "device": "mps", "t_verify": 4.9792540073394775, "t_mapping": 56.36870193481445, "n_registered": 55, "n_clusters": 2, "t_total": 1006.4563589096069}
+== pt_stpeters_stpauls: 60 images, scenes: {'st_pauls_cathedral': 30, 'st_peters_square': 30}
+{"n_images": 60, "n_pairs": 1770, "n_matched_pairs": 1716, "t_retrieval": 9.929060220718384, "t_matching": 654.5556128025055, "device": "mps", "t_verify": 1.8958368301391602, "t_mapping": 45.36873698234558, "n_registered": 60, "n_clusters": 1, "t_total": 712.1039819717407}
+== stairs: 51 images, scenes: {'stairs_split_1': 28, 'stairs_split_2': 23}
+{"n_images": 51, "n_pairs": 1275, "n_matched_pairs": 564, "t_retrieval": 9.92112684249878, "t_matching": 492.92243790626526, "device": "mps", "t_verify": 1.3498260974884033, "t_mapping": 9.253397941589355, "n_registered": 39, "n_clusters": 4, "t_total": 513.6753640174866}
+                        dataset  score   mAA  clustering  n_images  n_scenes
+                            ETs  0.301 0.231       0.432        22         2
+imc2023_theather_imc2024_church  0.544 0.373       1.000        56         2
+            pt_stpeters_stpauls  0.508 0.515       0.500        60         2
+                         stairs  0.036 0.019       0.692        51         2
+FINAL (mean over datasets): 0.3470

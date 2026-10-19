@@ -33,7 +33,7 @@ class FeatureConfig:
     exhaustive_below: int = 20   # match all pairs if the dataset is this small
     topk: int = 20               # neighbours per image from global descriptors
     sim_threshold: float = 0.5   # ... plus every pair above this cosine similarity
-    max_keypoints: int = 4096
+    max_keypoints: int = 2048    # the validated setting; 4096 made LightGlue ~4x slower on a laptop
     detection_threshold: float = 0.01
     resize: int = 1024
     min_matches: int = 15

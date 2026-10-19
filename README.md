@@ -63,13 +63,44 @@ merged scenes hurt only clustering, unregistered images hurt only mAA.
 
 ## Results
 
-Local validation on a subset of the training data (RESULTS PENDING: see `results/`).
+Local validation on 4 training datasets, max 30 images per scene (189 images, 8 scenes plus outliers),
+run on an M-series MacBook (LightGlue on MPS, ALIKED on CPU, 2048 keypoints). The scores come from my
+re-implemented metric, so compare them with each other, not with the leaderboard.
 
-| Run | Datasets | Images | mAA | Clustering | Score |
+**Effect of the SfM pair threshold** (`min_num_matches`: verified inliers COLMAP needs before it uses a pair)
+
+| Setting | ETs | church + theater | St Peter's + St Paul's | stairs | **Mean** |
 |---|---|---|---|---|---|
-| baseline | – | – | – | – | – |
+| COLMAP default (15), run 1 | 0.301 | 0.544 | 0.508 | 0.036 | **0.347** |
+| COLMAP default (15), run 2 | 0.278 | 0.526 | 0.495 | 0.022 | **0.330** |
+| 50 | 0.361 | 0.450 | 0.460 | 0.000 | 0.318 |
+| 100 | 0.440 | 0.507 | 0.491 | 0.029 | 0.367 |
+| **200 (chosen)**, run 1 | 0.424 | 0.458 | 0.647 | 0.015 | **0.386** |
+| **200 (chosen)**, run 2 | 0.424 | 0.469 | 0.644 | 0.029 | **0.392** |
+| 400 | 0.340 | 0.295 | 0.644 | 0.000 | 0.320 |
 
-Kaggle leaderboard (ongoing competition, single public+private board): pending.
+Per-dataset breakdown for the chosen setting (`results/seed_minmatch200/scores.csv`):
+
+| Dataset | mAA | Clustering | Score |
+|---|---|---|---|
+| ETs (two near-identical figurines + outliers) | 0.269 | 1.000 | 0.424 |
+| imc2023_theather_imc2024_church | 0.307 | 1.000 | 0.469 |
+| pt_stpeters_stpauls | 0.475 | 1.000 | 0.644 |
+| stairs | 0.015 | 0.647 | 0.029 |
+
+What I learned from the errors (`results/*/submission.csv` vs ground truth):
+- **Look-alike scenes get glued together.** With COLMAP's default of 15 inliers, a handful of chance matches
+  merged St Peter's Square and St Paul's Cathedral into one model (clustering 0.5). Requiring 200 inliers
+  splits them (clustering 1.0) and lifts the mean score by about 0.05. Too strict (400) breaks real scenes apart.
+- **Symmetric buildings flip.** The church is nearly symmetric. About half its cameras are placed on the
+  wrong side (relative rotation off by ~176°), so mAA stays at ~0.3 even though every image is in the right
+  cluster. This is the "doppelgänger" problem in SfM.
+- **stairs** (repetitive steps, narrow baseline) barely registers. Repetitive texture needs better matching.
+- COLMAP is multi-threaded, so runs are not bit-identical even with a fixed seed. Expect about ±0.01 on the mean.
+- Speed: matching is the bottleneck (~0.4–0.8 s per pair on the laptop). Global descriptors pruned only 0–9% of pairs
+  at a 0.5 similarity threshold. This suits recall (top teams also used loose pairing) but costs time.
+
+Kaggle leaderboard (ongoing competition, single public+private board): not submitted yet.
 
 ## Reproduce
 
@@ -78,8 +109,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest                      # geometry + metric unit tests
 # competition data (needs a Kaggle token and accepted rules)
 .venv/bin/python scripts/download_subset.py --list
-.venv/bin/python scripts/download_subset.py --datasets imc2024_lizard_pond
-.venv/bin/python scripts/run_local_eval.py --datasets imc2024_lizard_pond --max-per-scene 40
+.venv/bin/python scripts/download_subset.py --datasets ETs imc2023_theather_imc2024_church pt_stpeters_stpauls stairs   # ~345 MB
+.venv/bin/python scripts/run_local_eval.py --datasets ETs imc2023_theather_imc2024_church pt_stpeters_stpauls stairs --max-per-scene 30 --tag mine
+# re-run only the SfM stage on cached matches (about 1 min instead of ~40)
+.venv/bin/python scripts/run_local_eval.py --datasets ETs stairs --max-per-scene 30 --reuse-features results/mine --min-num-matches 100 --tag mine_100
 ```
 
 Kaggle submission:
@@ -120,3 +153,5 @@ Ideas from the IMC 2025 top solutions that I have not done yet:
 - Stronger retrieval for clustering: MASt3R-ASMK instead of DINOv2 (used by the 1st and 5th place teams).
 - Rotation-aware matching (upright vs rotated photos) and keypoint-density crops for high-res images.
 - Merging or splitting COLMAP models with a match-graph check before writing clusters.
+- Doppelgänger filtering for symmetric buildings (drop pairs whose matches cover only a small, symmetric part of the image).
+- A larger retrieval cut (stricter similarity threshold) once matching runs on a GPU, to trade a little recall for a lot of speed.

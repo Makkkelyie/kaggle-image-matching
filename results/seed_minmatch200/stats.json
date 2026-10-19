@@ -1,0 +1,51 @@
+{
+ "config": {
+  "device": "auto",
+  "dino_model": "facebook/dinov2-base",
+  "dino_size": 448,
+  "exhaustive_below": 20,
+  "topk": 20,
+  "sim_threshold": 0.5,
+  "max_keypoints": 2048,
+  "detection_threshold": 0.01,
+  "resize": 1024,
+  "min_matches": 15
+ },
+ "max_per_scene": 30,
+ "min_num_matches": 200,
+ "final_score": 0.3917370172648502,
+ "per_dataset": {
+  "ETs": {
+   "features": "cached",
+   "t_verify": 0.23020076751708984,
+   "t_mapping": 2.280164957046509,
+   "n_registered": 19,
+   "n_clusters": 2,
+   "t_total": 2.6207711696624756
+  },
+  "imc2023_theather_imc2024_church": {
+   "features": "cached",
+   "t_verify": 2.044144868850708,
+   "t_mapping": 7.442070007324219,
+   "n_registered": 45,
+   "n_clusters": 2,
+   "t_total": 9.634331226348877
+  },
+  "pt_stpeters_stpauls": {
+   "features": "cached",
+   "t_verify": 2.060325860977173,
+   "t_mapping": 18.25829005241394,
+   "n_registered": 60,
+   "n_clusters": 2,
+   "t_total": 20.53621506690979
+  },
+  "stairs": {
+   "features": "cached",
+   "t_verify": 1.4124228954315186,
+   "t_mapping": 3.177319049835205,
+   "n_registered": 22,
+   "n_clusters": 3,
+   "t_total": 4.723749876022339
+  }
+ }
+}

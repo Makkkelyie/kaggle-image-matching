@@ -45,7 +45,8 @@ def build_database(db_path: Path, image_dir: Path, image_names: list[str],
     return pairs_path
 
 
-def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, num_threads: int = -1) -> dict:
+def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, min_num_matches: int = 200,
+                num_threads: int = -1) -> dict:
     image_names = (workdir / "images.txt").read_text().split("\n")
     kpts = dict(np.load(workdir / "keypoints.npz"))
     matches = dict(np.load(workdir / "matches.npz"))
@@ -60,7 +61,12 @@ def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, num_thr
 
     opts = pycolmap.IncrementalPipelineOptions()
     opts.min_model_size = min_model_size
+    # Verified inliers needed before COLMAP uses an image pair. The default (15) lets a few
+    # chance matches glue look-alike scenes (St Peter's + St Paul's) into one model; 200
+    # keeps them apart (local clustering score 0.43-0.5 -> 1.0 on ETs / pt_stpeters_stpauls).
+    opts.min_num_matches = min_num_matches
     opts.num_threads = num_threads
+    opts.random_seed = 0  # reproducible runs (COLMAP's RANSAC otherwise varies run to run)
     opts.mapper.init_min_num_inliers = 50  # LightGlue gives fewer, cleaner matches than SIFT
     out_dir = workdir / "sparse"
     shutil.rmtree(out_dir, ignore_errors=True)
@@ -84,4 +90,12 @@ def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, num_thr
 
 
 if __name__ == "__main__":
-    reconstruct(Path(sys.argv[1]), Path(sys.argv[2]))
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("workdir", type=Path)
+    ap.add_argument("image_dir", type=Path)
+    ap.add_argument("--min-model-size", type=int, default=3)
+    ap.add_argument("--min-num-matches", type=int, default=200)
+    a = ap.parse_args()
+    reconstruct(a.workdir, a.image_dir, a.min_model_size, a.min_num_matches)
