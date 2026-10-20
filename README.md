@@ -116,7 +116,12 @@ fountain shot in the same yard) and re-ran the threshold sweep on all six, reusi
 | Version | Change | Local (6 datasets) | Leaderboard |
 |---|---|---|---|
 | 3 | 200 inliers, 2048 keypoints | 0.378 | 19.46 |
-| 4 | + leftover pass, 4096 keypoints on GPU | 0.381 (2048 kp) | pending |
+| 4 | + leftover pass, 4096 keypoints on GPU | 0.381 (2048 kp) | **27.72** |
+
+The leaderboard went up much more (+8.3) than the local score (+0.003). Two reasons are likely: local runs used
+2048 keypoints, so the 4096 gain isn't counted there, and the hidden test probably has scenes that fall entirely
+below 200 inliers, which the leftover pass now reconstructs instead of scoring 0. Both changes went into one
+submission, so I can't split the +8.3 between them.
 
 What I learned from the errors (`results/*/submission.csv` vs ground truth):
 - **Look-alike scenes get glued together.** With COLMAP's default of 15 inliers, a handful of chance matches
@@ -133,11 +138,11 @@ What I learned from the errors (`results/*/submission.csv` vs ground truth):
 Kaggle: the notebook runs end to end on a Kaggle GPU (internet off). On the public example test set it took
 2.8 min, clustered the ETs dataset perfectly (10 / 9 images, 3 outliers) and wrote a valid `submission.csv`.
 On GPU, LightGlue takes ~0.065 s per pair, so the ~1,300 hidden test images should fit well inside the 9-hour limit.
-**Leaderboard score: 19.46** (Version 3, submitted Oct 2026 after the board froze, so it isn't ranked). For scale,
-the frozen board's 1st place is 65.56, 10th is 42.58, and 19.46 would sit around 24th of 30. The hidden test
-scores lower than my local subset (≈0.39 on a 0–1 scale, i.e. ≈39), probably because it includes harder
-datasets than the four I validated on, and a strict 200-inlier threshold costs recall there. The "Next steps"
-below are where I'd expect the gains.
+**Leaderboard score: 27.72** (Version 4; Version 3 scored 19.46). Both were submitted in Oct 2026 after the board
+froze, so they aren't ranked. For scale, the frozen board's 1st place is 65.56 and 10th is 42.58. The hidden test
+still scores lower than my local subset (≈0.38 on a 0–1 scale, i.e. ≈38), probably because it includes harder
+datasets than the six I validated on. Version 4 takes 7.5 min on the public example test (4096 keypoints on GPU,
+~0.17 s per pair). The "Next steps" below are where I'd expect the gains.
 
 ## Reproduce
 
