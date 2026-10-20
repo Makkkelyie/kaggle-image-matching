@@ -45,8 +45,22 @@ def build_database(db_path: Path, image_dir: Path, image_names: list[str],
     return pairs_path
 
 
+def _clusters(recs) -> list[dict]:
+    clusters = []
+    for rec in sorted(recs.values(), key=lambda r: r.num_reg_images(), reverse=True):
+        poses = {}
+        for img in rec.images.values():
+            if not img.has_pose:
+                continue
+            pose = img.cam_from_world() if callable(img.cam_from_world) else img.cam_from_world
+            poses[img.name] = {"R": pose.rotation.matrix().tolist(), "t": np.asarray(pose.translation).tolist()}
+        if poses:
+            clusters.append(poses)
+    return clusters
+
+
 def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, min_num_matches: int = 200,
-                num_threads: int = -1) -> dict:
+                fallback_min_num_matches: int = 50, num_threads: int = -1) -> dict:
     image_names = (workdir / "images.txt").read_text().split("\n")
     kpts = dict(np.load(workdir / "keypoints.npz"))
     matches = dict(np.load(workdir / "matches.npz"))
@@ -72,19 +86,27 @@ def reconstruct(workdir: Path, image_dir: Path, min_model_size: int = 3, min_num
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir()
     recs = pycolmap.incremental_mapping(str(db_path), str(image_dir), str(out_dir), opts)
+    clusters = _clusters(recs)
+
+    # Leftover pass: images the strict threshold left unregistered get a second chance with a
+    # looser one, restricted to those images so they cannot glue onto (or merge) the strict models.
+    # A scene whose pairs all fall below the strict threshold would otherwise be all outliers.
+    registered = {n for c in clusters for n in c}
+    leftover = [n for n in image_names if n not in registered]
+    n_fallback = 0
+    if fallback_min_num_matches and len(leftover) >= min_model_size:
+        opts.min_num_matches = fallback_min_num_matches
+        opts.image_names = leftover
+        fb_dir = workdir / "sparse_fallback"
+        shutil.rmtree(fb_dir, ignore_errors=True)
+        fb_dir.mkdir()
+        extra = _clusters(pycolmap.incremental_mapping(str(db_path), str(image_dir), str(fb_dir), opts))
+        n_fallback = sum(len(c) for c in extra)
+        clusters += extra
     t2 = time.time()
 
-    clusters = []
-    for rec in sorted(recs.values(), key=lambda r: r.num_reg_images(), reverse=True):
-        poses = {}
-        for img in rec.images.values():
-            if not img.has_pose:
-                continue
-            pose = img.cam_from_world() if callable(img.cam_from_world) else img.cam_from_world
-            poses[img.name] = {"R": pose.rotation.matrix().tolist(), "t": np.asarray(pose.translation).tolist()}
-        clusters.append(poses)
     result = {"clusters": clusters, "t_verify": t1 - t0, "t_mapping": t2 - t1,
-              "n_registered": sum(len(c) for c in clusters)}
+              "n_registered": sum(len(c) for c in clusters), "n_fallback": n_fallback}
     (workdir / "clusters.json").write_text(json.dumps(result))
     return result
 
@@ -97,5 +119,6 @@ if __name__ == "__main__":
     ap.add_argument("image_dir", type=Path)
     ap.add_argument("--min-model-size", type=int, default=3)
     ap.add_argument("--min-num-matches", type=int, default=200)
+    ap.add_argument("--fallback-min-num-matches", type=int, default=50, help="0 = no leftover pass")
     a = ap.parse_args()
-    reconstruct(a.workdir, a.image_dir, a.min_model_size, a.min_num_matches)
+    reconstruct(a.workdir, a.image_dir, a.min_model_size, a.min_num_matches, a.fallback_min_num_matches)

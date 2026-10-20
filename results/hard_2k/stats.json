@@ -1,0 +1,47 @@
+{
+ "config": {
+  "device": "auto",
+  "dino_model": "facebook/dinov2-base",
+  "dino_size": 448,
+  "exhaustive_below": 20,
+  "topk": 20,
+  "sim_threshold": 0.5,
+  "max_keypoints": 2048,
+  "detection_threshold": 0.01,
+  "resize": 1024,
+  "min_matches": 15
+ },
+ "max_per_scene": 30,
+ "min_num_matches": 200,
+ "final_score": 0.3441494565129837,
+ "per_dataset": {
+  "fbk_vineyard": {
+   "n_images": 90,
+   "n_pairs": 4005,
+   "n_matched_pairs": 3876,
+   "t_retrieval": 35.05810213088989,
+   "t_matching": 3773.512631893158,
+   "device": "mps",
+   "t_verify": 5.823624134063721,
+   "t_mapping": 4.947275161743164,
+   "n_registered": 65,
+   "n_fallback": 0,
+   "n_clusters": 10,
+   "t_total": 3820.3220479488373
+  },
+  "imc2023_haiper": {
+   "n_images": 54,
+   "n_pairs": 810,
+   "n_matched_pairs": 626,
+   "t_retrieval": 26.794128894805908,
+   "t_matching": 925.7043828964233,
+   "device": "mps",
+   "t_verify": 8.813302993774414,
+   "t_mapping": 12.01674509048462,
+   "n_registered": 49,
+   "n_fallback": 0,
+   "n_clusters": 4,
+   "t_total": 973.8583669662476
+  }
+ }
+}

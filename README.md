@@ -88,6 +88,36 @@ Per-dataset breakdown for the chosen setting (`results/seed_minmatch200/scores.c
 | pt_stpeters_stpauls | 0.475 | 1.000 | 0.644 |
 | stairs | 0.015 | 0.647 | 0.029 |
 
+**Harder datasets and two follow-up changes (Oct 2026).** After the leaderboard came in at 19.46, I added two
+harder training datasets (`fbk_vineyard`: three rows of near-identical vines; `imc2023_haiper`: bike, chairs and a
+fountain shot in the same yard) and re-ran the threshold sweep on all six, reusing the cached matches:
+
+| `min_num_matches` | 4 original (mean) | fbk_vineyard | imc2023_haiper | **6-dataset mean** |
+|---|---|---|---|---|
+| 15 | 0.330–0.347 | 0.155 | 0.499 | – |
+| 50 | 0.329 | 0.147 | 0.496 | 0.326 |
+| 100 | 0.360 | 0.215 | 0.462 | 0.353 |
+| **200** | 0.395 | 0.289 | 0.400 | **0.378** |
+| 400 | 0.320 | 0.163 | 0.144 | – |
+| **200 + leftover pass at 50 (new default)** | 0.397 | 0.298 | 0.397 | **0.381** |
+
+- **200 still wins on average.** Looser thresholds help haiper (bike and chairs get more cameras) but glue the
+  vineyard rows and St Peter's / St Paul's together, which costs more.
+- **Leftover pass** (`imc/sfm.py`): images the strict pass leaves unregistered get a second incremental-mapping run
+  at 50 inliers, restricted to those images so they cannot merge into the strict models. Locally it is neutral
+  (+0.003, inside the ±0.01 run-to-run noise). I kept it because it is a safety net for hidden datasets where a whole
+  scene falls below 200 inliers and would otherwise score 0.
+- **4096 keypoints** (ETs + stairs only, since it took 8× longer on the laptop): ETs 0.440 → 0.485, stairs clustering
+  0.84 → 1.00 (its mAA stays ≈0). The Kaggle notebook now uses 4096 when a GPU is present; laptop runs stay at 2048.
+  The notebook's 8-hour budget check marks any remaining dataset as outliers if it runs long.
+- Errors that remain: haiper's bike and chairs share one model (clustering 0.72) because the background is the same
+  yard, and every vineyard row splits into 2–4 small models (mAA 0.17), so only the largest piece counts.
+
+| Version | Change | Local (6 datasets) | Leaderboard |
+|---|---|---|---|
+| 3 | 200 inliers, 2048 keypoints | 0.378 | 19.46 |
+| 4 | + leftover pass, 4096 keypoints on GPU | 0.381 (2048 kp) | pending |
+
 What I learned from the errors (`results/*/submission.csv` vs ground truth):
 - **Look-alike scenes get glued together.** With COLMAP's default of 15 inliers, a handful of chance matches
   merged St Peter's Square and St Paul's Cathedral into one model (clustering 0.5). Requiring 200 inliers
@@ -116,7 +146,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest                      # geometry + metric unit tests
 # competition data (needs a Kaggle token and accepted rules)
 .venv/bin/python scripts/download_subset.py --list
-.venv/bin/python scripts/download_subset.py --datasets ETs imc2023_theather_imc2024_church pt_stpeters_stpauls stairs   # ~345 MB
+.venv/bin/python scripts/download_subset.py --datasets ETs imc2023_theather_imc2024_church pt_stpeters_stpauls stairs fbk_vineyard imc2023_haiper   # ~645 MB
 .venv/bin/python scripts/run_local_eval.py --datasets ETs imc2023_theather_imc2024_church pt_stpeters_stpauls stairs --max-per-scene 30 --tag mine
 # re-run only the SfM stage on cached matches (about 1 min instead of ~40)
 .venv/bin/python scripts/run_local_eval.py --datasets ETs stairs --max-per-scene 30 --reuse-features results/mine --min-num-matches 100 --tag mine_100
@@ -124,7 +154,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 Kaggle submission:
 ```bash
-bash scripts/build_kaggle_deps.sh && kaggle datasets create -p kaggle_deps
+bash scripts/build_kaggle_deps.sh && kaggle datasets create -p kaggle_deps   # later: kaggle datasets version -p kaggle_deps -m "..."
 python scripts/build_notebook.py <kaggle-username> && kaggle kernels push -p notebooks
 # then press "Submit" on the notebook's page (internet is off, GPU on)
 ```
@@ -159,6 +189,7 @@ This builds on public work. I did not invent the method:
 Ideas from the IMC 2025 top solutions that I have not done yet:
 - Stronger retrieval for clustering: MASt3R-ASMK instead of DINOv2 (used by the 1st and 5th place teams).
 - Rotation-aware matching (upright vs rotated photos) and keypoint-density crops for high-res images.
-- Merging or splitting COLMAP models with a match-graph check before writing clusters.
+- Merging or splitting COLMAP models with a match-graph check before writing clusters (would fix the vineyard
+  rows that split into several small models).
 - Doppelgänger filtering for symmetric buildings (drop pairs whose matches cover only a small, symmetric part of the image).
 - A larger retrieval cut (stricter similarity threshold) once matching runs on a GPU, to trade a little recall for a lot of speed.

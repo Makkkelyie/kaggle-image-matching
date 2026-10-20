@@ -1,0 +1,29 @@
+{
+ "config": {
+  "device": "auto",
+  "dino_model": "facebook/dinov2-base",
+  "dino_size": 448,
+  "exhaustive_below": 20,
+  "topk": 20,
+  "sim_threshold": 0.5,
+  "max_keypoints": 2048,
+  "detection_threshold": 0.01,
+  "resize": 1024,
+  "min_matches": 15
+ },
+ "max_per_scene": 30,
+ "min_num_matches": 200,
+ "fallback_min_num_matches": 50,
+ "final_score": 0.39655901847412206,
+ "per_dataset": {
+  "imc2023_haiper": {
+   "features": "cached",
+   "t_verify": 6.886957168579102,
+   "t_mapping": 8.615103006362915,
+   "n_registered": 52,
+   "n_fallback": 2,
+   "n_clusters": 5,
+   "t_total": 15.698784112930298
+  }
+ }
+}

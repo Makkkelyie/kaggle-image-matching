@@ -15,7 +15,7 @@ from .features import FeatureConfig, run_stage
 
 def run_dataset(dataset: str, image_dir: Path, image_names: list[str], workdir: Path,
                 cfg: FeatureConfig | None = None, min_num_matches: int = 200,
-                reuse_features: bool = False) -> tuple[list[dict], dict]:
+                fallback_min_num_matches: int = 50, reuse_features: bool = False) -> tuple[list[dict], dict]:
     cfg = cfg or FeatureConfig()
     workdir = Path(workdir) / dataset
     t0 = time.time()
@@ -27,7 +27,8 @@ def run_dataset(dataset: str, image_dir: Path, image_names: list[str], workdir: 
     # SfM in a child process: keeps torch and pycolmap (two libomp copies on macOS) apart,
     # and a COLMAP crash on one dataset cannot kill the whole submission.
     proc = subprocess.run([sys.executable, "-m", "imc.sfm", str(workdir), str(image_dir),
-                           "--min-num-matches", str(min_num_matches)],
+                           "--min-num-matches", str(min_num_matches),
+                           "--fallback-min-num-matches", str(fallback_min_num_matches)],
                           cwd=Path(__file__).resolve().parent.parent, capture_output=True, text=True)
     clusters = []
     if proc.returncode == 0:

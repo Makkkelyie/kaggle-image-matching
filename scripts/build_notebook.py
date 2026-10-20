@@ -43,7 +43,9 @@ from imc.pipeline import run_dataset
 
 DATA = Path(sorted(glob.glob('/kaggle/input/**/sample_submission.csv', recursive=True))[0]).parent
 print('data:', DATA)
-cfg = FeatureConfig(dino_model=f'{DEPS}/weights/dinov2-base')
+# 4096 keypoints on GPU: helped locally (ETs 0.44 -> 0.49, stairs clustering 0.84 -> 1.0) but is
+# ~4-8x slower on a laptop, so the CPU/MPS default stays 2048.
+cfg = FeatureConfig(dino_model=f'{DEPS}/weights/dinov2-base', max_keypoints=4096 if torch.cuda.is_available() else 2048)
 print(torch.__version__, torch.cuda.is_available())
 datasets = test_datasets(DATA)
 print({d: len(v) for d, v in datasets.items()})"""),

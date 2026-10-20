@@ -1,0 +1,29 @@
+{
+ "config": {
+  "device": "auto",
+  "dino_model": "facebook/dinov2-base",
+  "dino_size": 448,
+  "exhaustive_below": 20,
+  "topk": 20,
+  "sim_threshold": 0.5,
+  "max_keypoints": 2048,
+  "detection_threshold": 0.01,
+  "resize": 1024,
+  "min_matches": 15
+ },
+ "max_per_scene": 30,
+ "min_num_matches": 200,
+ "fallback_min_num_matches": 50,
+ "final_score": 0.297723292469352,
+ "per_dataset": {
+  "fbk_vineyard": {
+   "features": "cached",
+   "t_verify": 33.154184103012085,
+   "t_mapping": 32.254624128341675,
+   "n_registered": 78,
+   "n_fallback": 15,
+   "n_clusters": 14,
+   "t_total": 68.43015503883362
+  }
+ }
+}
